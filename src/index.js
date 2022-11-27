@@ -156,6 +156,7 @@ formRef.addEventListener('submit', event => {
   currentPage = 1;
   searchEnded = false;
   firstAsk = true;
+  document.removeEventListener('scroll', debouncedScroll);
 
   getGallery()
     .then(response => {
@@ -185,3 +186,32 @@ window.addEventListener('load', () => {
     }
   }
 });
+
+document.addEventListener(
+  'scroll',
+  _.debounce(event => {
+    if (!chackBottom(100)) return;
+
+    if (pagesCount !== currentPage) {
+      firstAsk = false;
+      currentPage += 1;
+
+      getGallery().then(response => {
+        renderImages(response.hits);
+      });
+      return;
+    }
+
+    Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+    searchEnded = true;
+  }, 500)
+);
+
+const debouncedScroll = _.debounce(() => {
+  const { height: cardHeight } = galleryRef.firstChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}, 1500);
